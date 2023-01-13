@@ -81,6 +81,22 @@ app.post('/participants', async (req, res) => {
 // GET /participants
 app.get('/participants', async (req, res) => {
     
+    try{
+
+        //find all participants in the participants collection
+        const participantsList = await db.collection('participants').find().toArray();
+        //verify if list is empty
+        if(!participantsList){
+            return res.status(404).send('Não há nenhum participante no chat!')
+        }
+
+        console.log(participantsList);
+        res.send(participantsList);
+
+    } catch (err) {
+        //error return
+        res.status(500).send(err.message)
+    }
 
 });
 
