@@ -152,6 +152,33 @@ app.post('/messages', async (req, res) => {
 // GET /messages
 app.get('/messages', async (req, res) => {
 
+    const limit = parseInt(req.query.limit);
+    const { user } = req.headers;
+
+    try { 
+
+        //get all messages
+        const allMessages = await db.collection('messages').find().toArray();
+        //filter messages that should be visible to user
+        const filteredMsgs = allMessages.filter((msg) => {
+            //if message was sent too all users (type === 'message') or it was a private message sent or sent to the user, filter it
+            if(msg.type === 'message' || ((msg.to === user || msg.from === user) && msg.type === 'private_message')){
+                return msg;
+            }
+        });
+
+        //if limit variable is defined, return last {limit} filtered messages, otherwise, return all filtered messages
+        if(limit !== undefined){
+            return res.send(filteredMsgs.slice(-limit));
+        } else {
+            return res.send(filteredMsgs);
+        }
+
+    } catch (err) { 
+        //error return
+        res.status(500).send(err.message);
+    }
+
 });
 
 // POST /status
