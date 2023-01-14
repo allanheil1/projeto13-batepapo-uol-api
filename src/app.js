@@ -136,7 +136,7 @@ app.post('/messages', async (req, res) => {
 
         //participant does not exist
         if(!userExists){
-            return res.send(409);
+            return res.send(422);
         }
 
         await db.collection('messages').insertOne(msg)
@@ -166,12 +166,22 @@ app.get('/messages', async (req, res) => {
                 return msg;
             }
         });
-
+        
         //if limit variable is defined, return last {limit} filtered messages, otherwise, return all filtered messages
-        if(limit !== undefined){
-            return res.send(filteredMsgs.slice(-limit));
+        if(limit && limit !== NaN){
+            if(limit < 0){
+                return res.send(422);
+            }
+
+            return res.send(filteredMsgs.slice(-limit).reverse());
+
         } else {
-            return res.send(filteredMsgs);
+            if(limit === 0 || isNaN(limit)){
+                return res.send(422);
+            }
+
+            return res.send((filteredMsgs).reverse());
+
         }
 
     } catch (err) { 
