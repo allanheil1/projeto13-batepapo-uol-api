@@ -22,13 +22,19 @@ mongoClient.connect().then(() => {
 });
 
 // Schemas
+//Participants validation schema
 const schemaParticipants = joi.object({
     name: joi.string().min(1).required()
 });
 
-// const schemaMessages = joi.object({
-//     name: joi.string().min(1).required()
-// });
+//Messages validation schema
+const schemaMessages = joi.object({
+    from: joi.string().required(),
+    to: joi.string().required(),
+    text: joi.string().required(),
+    type: joi.string().valid("message", "private_message").required(),
+    time: joi.string().required()
+});
 
 // Rotas
 // POST /participants
@@ -36,7 +42,7 @@ app.post('/participants', async (req, res) => {
 
     const participant = req.body;
 
-    //object format validation
+    //object format validation schema
     const valid = schemaParticipants.validate(participant);
 
     if(valid.error){
@@ -80,9 +86,8 @@ app.post('/participants', async (req, res) => {
 
 // GET /participants
 app.get('/participants', async (req, res) => {
-    
-    try{
 
+    try{
         //find all participants in the participants collection
         const participantsList = await db.collection('participants').find().toArray();
         //verify if list is empty
@@ -90,31 +95,68 @@ app.get('/participants', async (req, res) => {
             return res.status(404).send('Não há nenhum participante no chat!')
         }
 
-        console.log(participantsList);
         res.send(participantsList);
 
     } catch (err) {
         //error return
-        res.status(500).send(err.message)
+        res.status(500).send(err.message);
     }
 
 });
 
 // POST /messages
-app.post('/participants', (req, res) => {
+app.post('/messages', async (req, res) => {
+    const { to, text, type } = req.body;
+    const { user } = req.headers;
+    console.log(user);
 
+    //message object to post
+    const msg = {
+        from: user,
+        to: to,
+        text: text,
+        type: type,
+        time: dayjs().format('HH:mm:ss')
+    }
+
+    console.log(msg);
+
+    //object format validation schema
+    const valid = schemaMessages.validate(msg);
+    
+    if(valid.error){
+        const err = valid.error.details.map((detail) => detail.msg);
+        return res.status(422).send(err);
+    }
+
+    try{
+
+        //verify if user exists in the database
+        const userExists = await db.collection('participants').findOne({ name: user });
+
+        //participant does not exist
+        if(!userExists){
+            return res.send(409);
+        }
+
+        await db.collection('messages').insertOne(msg)
+
+        res.send(201);
+
+    } catch (err) {
+        //error return
+        res.status(500).send(err.message);
+    }
 });
 
 // GET /messages
-app.get('/participants', (req, res) => {
+app.get('/messages', async (req, res) => {
 
 });
 
 // POST /status
-app.post('/participants', (req, res) => {
+app.post('/status', async (req, res) => {
 
 });
-
-
 
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
