@@ -167,18 +167,16 @@ app.get('/messages', async (req, res) => {
             }
         });
 
+        if((limit < 0 || limit === 0) || isNaN(limit)){
+            return res.send(422);
+        }
+
         //if limit variable is defined, return last {limit} filtered messages, otherwise, return all filtered messages
-        if(limit && limit !== NaN){
-            if(limit < 0){
-                return res.send(422);
-            }
+        if(limit !== undefined && limit !== NaN){
 
             return res.send(filteredMsgs.slice(-limit).reverse());
 
         } else {
-            if(limit === 0 || isNaN(limit)){
-                return res.send(422);
-            }
 
             return res.send((filteredMsgs).reverse());
 
