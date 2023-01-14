@@ -167,12 +167,11 @@ app.get('/messages', async (req, res) => {
             }
         });
 
-        if((limit < 0 || limit === 0) || isNaN(limit)){
+        if((limit < 0 || limit === 0)){
             return res.send(422);
         }
 
-        //if limit variable is defined, return last {limit} filtered messages, otherwise, return all filtered messages
-        if(limit !== undefined && limit !== NaN){
+        if(limit !== undefined && !isNaN(limit)){
 
             return res.send(filteredMsgs.slice(-limit).reverse());
 
@@ -191,6 +190,26 @@ app.get('/messages', async (req, res) => {
 
 // POST /status
 app.post('/status', async (req, res) => {
+
+    const { user } = req.headers;
+
+    try {
+
+        const userExists = await db.collection('participants').findOne({ name:user });
+
+        //if the participant does not exist, return error 404 not found
+        if(!userExists){
+            return res.send(404);
+        }
+        //if the participant exists, update lastStatus atributte
+        await db.collection('participants').updateOne({ name: user }, {$set: {lastStatus: Date.now()}});
+
+        return res.send(200);
+
+    } catch (err) {
+        //error return
+        res.status(500).send(err.message);
+    }
 
 });
 
