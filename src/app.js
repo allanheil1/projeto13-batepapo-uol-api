@@ -36,6 +36,40 @@ const schemaMessages = joi.object({
     time: joi.string().required()
 });
 
+//Automatically remove inactive participants every 15 seconds
+setInterval(async () => {
+
+    const time = Date.now() - 10000;
+
+    try { 
+
+        //find all participants that have been active more time than the 'time' variable
+        const inactivePartList = await db.collection('participants').find({ lastStatus: {$lte: time} }).toArray();
+
+        //If we found inactive participants, for each of them, we should make a 'leaving' message
+        if(inactivePartList.length > 0){
+            const inactiveMessages = inactivePartList.map((inacPart) => {   
+                return {
+                    from: inacPart.name,
+                    to: 'Todos',
+                    text: 'sai da sala...',
+                    type: 'status',
+                    time: dayjs().format("hh:mm:ss")
+                }
+            });
+
+            await db.collection('messages').insertMany(inactiveMessages);
+            await db.collection('participants').deleteMany({ lastStatus: {$lte: time} });
+
+        }
+
+    } catch (err) {
+        //error return
+        return console.error(`Erro ao tentar remover usuários inativos`);
+    }
+
+}, 15000);
+
 // Rotas
 // POST /participants
 app.post('/participants', async (req, res) => {
@@ -71,7 +105,7 @@ app.post('/participants', async (req, res) => {
             to: 'Todos',
             text: 'entra na sala...',
             type: 'status',
-            time: dayjs().format('HH:mm:ss')
+            time: dayjs().format('hh:mm:ss')
         })
 
         //send status 201 - 'CREATED'
@@ -116,7 +150,7 @@ app.post('/messages', async (req, res) => {
         to: to,
         text: text,
         type: type,
-        time: dayjs().format('HH:mm:ss')
+        time: dayjs().format('hh:mm:ss')
     }
 
     console.log(msg);
@@ -195,7 +229,7 @@ app.post('/status', async (req, res) => {
 
     try {
 
-        const userExists = await db.collection('participants').findOne({ name:user });
+        const userExists = await db.collection('participants').findOne({ name: user });
 
         //if the participant does not exist, return error 404 not found
         if(!userExists){
