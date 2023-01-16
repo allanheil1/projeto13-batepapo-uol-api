@@ -37,7 +37,7 @@ const schemaMessages = joi.object({
 });
 
 //Automatically remove inactive participants every 15 seconds
-// setInterval(async () => {
+ setInterval(async () => {
 
 //     const time = Date.now() - 10000;
 
@@ -68,7 +68,7 @@ const schemaMessages = joi.object({
 //         return console.error(`Erro ao tentar remover usuários inativos`);
 //     }
 
-// }, 15000);
+ }, 15000);
 
 // Rotas
 // POST /participants
