@@ -37,38 +37,38 @@ const schemaMessages = joi.object({
 });
 
 //Automatically remove inactive participants every 15 seconds
-setInterval(async () => {
+// setInterval(async () => {
 
-    const time = Date.now() - 10000;
+//     const time = Date.now() - 10000;
 
-    try { 
+//     try { 
 
-        //find all participants that have been active more time than the 'time' variable
-        const inactivePartList = await db.collection('participants').find({ lastStatus: {$lte: time} }).toArray();
+//         //find all participants that have been active more time than the 'time' variable
+//         const inactivePartList = await db.collection('participants').find({ lastStatus: {$lte: time} }).toArray();
 
-        //If we found inactive participants, for each of them, we should make a 'leaving' message
-        if(inactivePartList.length > 0){
-            const inactiveMessages = inactivePartList.map((inacPart) => {   
-                return {
-                    from: inacPart.name,
-                    to: 'Todos',
-                    text: 'sai da sala...',
-                    type: 'status',
-                    time: dayjs().format("hh:mm:ss")
-                }
-            });
+//         //If we found inactive participants, for each of them, we should make a 'leaving' message
+//         if(inactivePartList.length > 0){
+//             const inactiveMessages = inactivePartList.map((inacPart) => {   
+//                 return {
+//                     from: inacPart.name,
+//                     to: 'Todos',
+//                     text: 'sai da sala...',
+//                     type: 'status',
+//                     time: dayjs().format("hh:mm:ss")
+//                 }
+//             });
 
-            await db.collection('messages').insertMany(inactiveMessages);
-            await db.collection('participants').deleteMany({ lastStatus: {$lte: time} });
+//             await db.collection('messages').insertMany(inactiveMessages);
+//             await db.collection('participants').deleteMany({ lastStatus: {$lte: time} });
 
-        }
+//         }
 
-    } catch (err) {
-        //error return
-        return console.error(`Erro ao tentar remover usuários inativos`);
-    }
+//     } catch (err) {
+//         //error return
+//         return console.error(`Erro ao tentar remover usuários inativos`);
+//     }
 
-}, 15000);
+// }, 15000);
 
 // Rotas
 // POST /participants
@@ -201,16 +201,17 @@ app.get('/messages', async (req, res) => {
             }
         });
 
-        if((limit < 0 || limit === 0)){
+        if(limit < 0 || limit === 0){
             return res.send(422);
         }
 
-        if(limit !== undefined && !isNaN(limit)){
-
+        if((limit !== undefined && !isNaN(limit))){
             return res.send(filteredMsgs.slice(-limit).reverse());
 
         } else {
-
+            if((typeof(req.query.limit) === 'string')){
+                return res.send(422);
+            }
             return res.send((filteredMsgs).reverse());
 
         }
@@ -247,4 +248,5 @@ app.post('/status', async (req, res) => {
 
 });
 
+//server ON
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
