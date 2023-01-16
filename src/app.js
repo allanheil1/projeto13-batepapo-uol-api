@@ -39,34 +39,34 @@ const schemaMessages = joi.object({
 //Automatically remove inactive participants every 15 seconds
  setInterval(async () => {
 
-//     const time = Date.now() - 10000;
+    const time = Date.now() - 10000;
 
-//     try { 
+    try { 
 
-//         //find all participants that have been active more time than the 'time' variable
-//         const inactivePartList = await db.collection('participants').find({ lastStatus: {$lte: time} }).toArray();
+        //find all participants that have been active more time than the 'time' variable
+        const inactivePartList = await db.collection('participants').find({ lastStatus: {$lte: time} }).toArray();
 
-//         //If we found inactive participants, for each of them, we should make a 'leaving' message
-//         if(inactivePartList.length > 0){
-//             const inactiveMessages = inactivePartList.map((inacPart) => {   
-//                 return {
-//                     from: inacPart.name,
-//                     to: 'Todos',
-//                     text: 'sai da sala...',
-//                     type: 'status',
-//                     time: dayjs().format("hh:mm:ss")
-//                 }
-//             });
+        //If we found inactive participants, for each of them, we should make a 'leaving' message
+        if(inactivePartList.length > 0){
+            const inactiveMessages = inactivePartList.map((inacPart) => {   
+                return {
+                    from: inacPart.name,
+                    to: 'Todos',
+                    text: 'sai da sala...',
+                    type: 'status',
+                    time: dayjs().format("hh:mm:ss")
+                }
+            });
 
-//             await db.collection('messages').insertMany(inactiveMessages);
-//             await db.collection('participants').deleteMany({ lastStatus: {$lte: time} });
+            await db.collection('messages').insertMany(inactiveMessages);
+            await db.collection('participants').deleteMany({ lastStatus: {$lte: time} });
 
-//         }
+        }
 
-//     } catch (err) {
-//         //error return
-//         return console.error(`Erro ao tentar remover usuários inativos`);
-//     }
+    } catch (err) {
+        //error return
+        return console.error(`Erro ao tentar remover usuários inativos`);
+    }
 
  }, 15000);
 
